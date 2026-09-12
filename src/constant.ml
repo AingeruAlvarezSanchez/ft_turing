@@ -4,6 +4,9 @@ let error : string = "Error"
 let too_few_args : string = name ^ ": " ^ error ^ "; The program must have at least one argument\n"
 let too_many_args : string = name ^ ": " ^ error ^ "; Too many arguments\n"
 let unrecognized_opt : string = name ^ ": " ^ error ^ "; Unrecognized option\n"
+let not_a_character: string = "must be a character"
+let not_valid_alphabet: string = "value is not a valid alphabet character"
+let not_valid_state: string = "value is not a valid state"
 
 let help_text : string = "usage: " ^ name ^ " [-h] jsonfile input
 
