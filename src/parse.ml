@@ -10,14 +10,26 @@ let to_action (s : string) : Type.action =
   match s with
   | "LEFT" -> Type.Left
   | "RIGHT" -> Type.Right
-  | s -> failwith ("invalid action: " ^ s)
+  | s -> failwith (Constant.not_valid_action ^ s)
 
-let parse_transition (t : Yojson.Basic.t) : Type.transition =
+let parse_transition (states : Type.state list) (alphabet : Type.symbol list) (t : Yojson.Basic.t) : Type.transition =
   {
-    read = t |> member "read" |> to_string |> to_symbol;
-    write = t |> member "write" |> to_string |> to_symbol;
-    to_state = t |> member "to_state" |> to_string;
-    action = t |> member "action" |> to_string |> to_action;
+    read = (
+      let value = t |> member Constant.read |> to_string |> to_symbol in
+      if not (List.mem value alphabet) then failwith ("[read] " ^ Constant.not_valid_alphabet)
+      else value
+    );
+    write = (
+      let value = t |> member Constant.write |> to_string |> to_symbol in
+      if not (List.mem value alphabet) then failwith ("[write] " ^ Constant.not_valid_alphabet)
+      else value
+    );
+    to_state = (
+      let value = t |> member Constant.to_state |> to_string in
+      if not (List.mem value states) then failwith ("[to_state] " ^ Constant.not_valid_state)
+      else value
+    );
+    action = t |> member Constant.action |> to_string |> to_action;
   }
 
 (* 
@@ -52,11 +64,11 @@ let parse_transition (t : Yojson.Basic.t) : Type.transition =
     3. Then, it calls an inner fold_left to add the content of each state to the "transitions" map. 
        It works in the same way, but iterates over each inner transition (the content of each state_name)
 *)
-let parse_transitions (json : Yojson.Basic.t) : Type.transition Type.StateMap.t =
-  json |> member "transitions" |> to_assoc
+let parse_transitions (states : Type.state list) (alphabet : Type.symbol list) (json : Yojson.Basic.t) : Type.transition Type.StateMap.t =
+  json |> member Constant.transitions |> to_assoc
   |> List.fold_left
        (fun map (state_name, transitions_json) ->
-          transitions_json |> to_list |> List.map parse_transition
+          transitions_json |> to_list |> List.map (parse_transition states alphabet)
           |> List.fold_left
                (fun map (t : Type.transition) ->
                   Type.StateMap.add (state_name, t.read) t map)
@@ -65,26 +77,26 @@ let parse_transitions (json : Yojson.Basic.t) : Type.transition Type.StateMap.t 
 
 let parse_file (fname: string): Type.machine = 
   let json = Yojson.Basic.from_file fname in
-  let states = json |> member "states" |> to_list |> List.map to_string in
-  let alphabet = json |> member "alphabet" |> to_list |> List.map to_string |> List.map to_symbol in
+  let states = json |> member Constant.states |> to_list |> List.map to_string in
+  let alphabet = json |> member Constant.alphabet |> to_list |> List.map to_string |> List.map to_symbol in
   {
-    name = json |> member "name" |> to_string;
+    name = json |> member Constant.name |> to_string;
     alphabet;
     blank = (
-      let value = json |> member "blank" |> to_string |> to_symbol in
+      let value = json |> member Constant.blank |> to_string |> to_symbol in
       if not (List.mem value alphabet) then failwith ("[blank] " ^ Constant.not_valid_alphabet)
       else value
     );
     states;
     initial = (
-      let value = json |> member "initial" |> to_string in 
+      let value = json |> member Constant.initial |> to_string in 
       if not (List.mem value states) then failwith ("[initial] " ^ Constant.not_valid_state)
       else value
     );
     finals =  (
-      let value = json |> member "finals" |> to_list |> List.map to_string in
+      let value = json |> member Constant.finals |> to_list |> List.map to_string in
       if not (List.for_all (fun elem -> List.mem elem states) value) then failwith ("[finals] " ^ Constant.not_valid_state)
       else value
     );
-    transitions = parse_transitions json
+    transitions = parse_transitions states alphabet json;
   }
