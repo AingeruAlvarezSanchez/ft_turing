@@ -6,6 +6,63 @@ let to_symbol (s: string): char =
   else
     s.[0]
 
+let to_action (s : string) : Type.action =
+  match s with
+  | "LEFT" -> Type.Left
+  | "RIGHT" -> Type.Right
+  | s -> failwith ("invalid action: " ^ s)
+
+let parse_transition (t : Yojson.Basic.t) : Type.transition =
+  {
+    read = t |> member "read" |> to_string |> to_symbol;
+    write = t |> member "write" |> to_string |> to_symbol;
+    to_state = t |> member "to_state" |> to_string;
+    action = t |> member "action" |> to_string |> to_action;
+  }
+
+(* 
+  For the sake of simplicity, I've decided to briefly explain what this function does in a visual way:
+
+  1. Take the member "transitions" from the JSON and transform it to an object (to_assoc)
+  2. use the List.fold_left which works as an accumulator function iterating all over the list, args are;
+    1 - fun accumulator tuple
+    2 - Initial accumulator value
+    3 - the list to apply it to.
+
+  The outer fold_left operates over the following args:
+    1 - fun map (state_name(which is the name of the transition e.g. "scanright"), 
+                 transitions_json(which is the content of each state e.g 
+                  [
+                    { "read" : "1", "to_state": "subone", "write": "=", "action": "LEFT"},
+                    { "read" : "-", "to_state": "HALT" , "write": ".", "action": "LEFT"}
+                  ]))
+    2 - Type.StateMap.empty
+    3 - the whole content of transitions as a list of tuples, e.g 
+        [...
+        ("eraseone", [
+            { "read" : "1", "to_state": "subone", "write": "=", "action": "LEFT"},
+            { "read" : "-", "to_state": "HALT" , "write": ".", "action": "LEFT"}
+        ]);
+        ("subone", [
+            { "read" : "1", "to_state": "subone", "write": "1", "action": "LEFT"},
+            { "read" : "-", "to_state": "skip" , "write": "-", "action": "LEFT"}
+        ])
+        ...]
+
+    3. Then, it calls an inner fold_left to add the content of each state to the "transitions" map. 
+       It works in the same way, but iterates over each inner transition (the content of each state_name)
+*)
+let parse_transitions (json : Yojson.Basic.t) : Type.transition Type.StateMap.t =
+  json |> member "transitions" |> to_assoc
+  |> List.fold_left
+       (fun map (state_name, transitions_json) ->
+          transitions_json |> to_list |> List.map parse_transition
+          |> List.fold_left
+               (fun map (t : Type.transition) ->
+                  Type.StateMap.add (state_name, t.read) t map)
+               map)
+       Type.StateMap.empty
+
 let parse_file (fname: string): Type.machine = 
   let json = Yojson.Basic.from_file fname in
   let states = json |> member "states" |> to_list |> List.map to_string in
@@ -29,4 +86,5 @@ let parse_file (fname: string): Type.machine =
       if not (List.for_all (fun elem -> List.mem elem states) value) then failwith ("[finals] " ^ Constant.not_valid_state)
       else value
     );
+    transitions = parse_transitions json
   }
