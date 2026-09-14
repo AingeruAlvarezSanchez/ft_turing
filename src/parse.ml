@@ -6,13 +6,13 @@ let to_symbol (s: string): char =
   else
     s.[0]
 
-let to_action (s : string) : Type.action =
+let to_action (s: string): Type.action =
   match s with
   | "LEFT" -> Type.Left
   | "RIGHT" -> Type.Right
   | s -> failwith (Constant.not_valid_action ^ s)
 
-let parse_transition (states : Type.state list) (alphabet : Type.symbol list) (t : Yojson.Basic.t) : Type.transition =
+let parse_transition (states: Type.state list) (alphabet: Type.symbol list) (t: Yojson.Basic.t): Type.transition =
   {
     read = (
       let value = t |> member Constant.read |> to_string |> to_symbol in
@@ -64,7 +64,7 @@ let parse_transition (states : Type.state list) (alphabet : Type.symbol list) (t
     3. Then, it calls an inner fold_left to add the content of each state to the "transitions" map. 
        It works in the same way, but iterates over each inner transition (the content of each state_name)
 *)
-let parse_transitions (states : Type.state list) (alphabet : Type.symbol list) (json : Yojson.Basic.t) : Type.transition Type.StateMap.t =
+let parse_transitions (states: Type.state list) (alphabet: Type.symbol list) (json: Yojson.Basic.t): Type.transition Type.StateMap.t =
   json |> member Constant.transitions |> to_assoc
   |> List.fold_left
        (fun map (state_name, transitions_json) ->
