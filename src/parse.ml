@@ -75,11 +75,11 @@ let parse_transitions (states: Type.state list) (alphabet: Type.symbol list) (js
                map)
        Type.StateMap.empty
 
-let parse_file (fname: string): Type.machine = 
+let parse_file (fname: string) (input: string): Type.machine =
   let json = Yojson.Basic.from_file fname in
   let states = json |> member Constant.states |> to_list |> List.map to_string in
   let alphabet = json |> member Constant.alphabet |> to_list |> List.map to_string |> List.map to_symbol in
-  {
+  let machine : Type.machine = {
     name = json |> member Constant.name |> to_string;
     alphabet;
     blank = (
@@ -89,7 +89,7 @@ let parse_file (fname: string): Type.machine =
     );
     states;
     initial = (
-      let value = json |> member Constant.initial |> to_string in 
+      let value = json |> member Constant.initial |> to_string in
       if not (List.mem value states) then failwith ("[initial] " ^ Constant.not_valid_state)
       else value
     );
@@ -99,4 +99,11 @@ let parse_file (fname: string): Type.machine =
       else value
     );
     transitions = parse_transitions states alphabet json;
-  }
+  } in
+  String.iter
+    (fun c ->
+        if not (List.mem c machine.alphabet) then failwith ("[input] " ^ Constant.not_valid_alphabet);
+        if (c = machine.blank) then failwith ("[input] " ^ Constant.must_not_be_blank)
+    )
+    input;
+  machine
