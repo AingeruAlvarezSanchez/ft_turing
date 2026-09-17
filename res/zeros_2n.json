@@ -1,0 +1,183 @@
+{
+	"name": "zeros_2n",
+	"alphabet": [
+		".",
+		"0",
+		"1",
+		"X",
+		"n",
+		"y"
+	],
+	"blank": ".",
+	"states": [
+		"start",
+		"sec",
+		"lm_y",
+		"lm_n",
+		"wr_y",
+		"wr_n",
+		"HALT"
+	],
+	"initial": "start",
+	"finals": [
+		"HALT"
+	],
+	"transitions": {
+		"start": [
+			{
+				"read": "0",
+				"to_state": "sec",
+				"write": "X",
+				"action": "RIGHT"
+			},
+			{
+				"read": "X",
+				"to_state": "start",
+				"write": "X",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "lm_n",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "lm_y",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"sec": [
+			{
+				"read": "0",
+				"to_state": "start",
+				"write": "X",
+				"action": "RIGHT"
+			},
+			{
+				"read": "X",
+				"to_state": "sec",
+				"write": "X",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "lm_n",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "lm_n",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"lm_y": [
+			{
+				"read": "X",
+				"to_state": "lm_y",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "0",
+				"to_state": "lm_y",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "1",
+				"to_state": "lm_y",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "wr_y",
+				"write": ".",
+				"action": "RIGHT"
+			}
+		],
+		"lm_n": [
+			{
+				"read": "X",
+				"to_state": "lm_n",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "0",
+				"to_state": "lm_n",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "1",
+				"to_state": "lm_n",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "wr_n",
+				"write": ".",
+				"action": "RIGHT"
+			}
+		],
+		"wr_y": [
+			{
+				"read": "X",
+				"to_state": "wr_y",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "wr_y",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "wr_y",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "HALT",
+				"write": "y",
+				"action": "LEFT"
+			}
+		],
+		"wr_n": [
+			{
+				"read": "X",
+				"to_state": "wr_n",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "wr_n",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "wr_n",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "HALT",
+				"write": "n",
+				"action": "LEFT"
+			}
+		]
+	}
+}

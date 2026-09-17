@@ -1,0 +1,472 @@
+{
+	"name": "palindrome",
+	"alphabet": [
+		".",
+		"0",
+		"1",
+		"A",
+		"B",
+		"n",
+		"y"
+	],
+	"blank": ".",
+	"states": [
+		"start",
+		"start2",
+		"find0",
+		"find1",
+		"eq0",
+		"eq1",
+		"ne0",
+		"ne1",
+		"backright",
+		"left",
+		"restoreL_y",
+		"restoreL_n",
+		"restoreR_y",
+		"restoreR_n",
+		"HALT"
+	],
+	"initial": "start",
+	"finals": [
+		"HALT"
+	],
+	"transitions": {
+		"start": [
+			{
+				"read": "0",
+				"to_state": "find0",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "find1",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "A",
+				"to_state": "restoreL_y",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "B",
+				"to_state": "restoreL_y",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "HALT",
+				"write": "y",
+				"action": "LEFT"
+			}
+		],
+		"start2": [
+			{
+				"read": "0",
+				"to_state": "find0",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "find1",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "A",
+				"to_state": "restoreL_y",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "B",
+				"to_state": "restoreL_y",
+				"write": "1",
+				"action": "LEFT"
+			}
+		],
+		"find0": [
+			{
+				"read": "A",
+				"to_state": "find0",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "find0",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "eq0",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "ne0",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "restoreL_y",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"find1": [
+			{
+				"read": "A",
+				"to_state": "find1",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "find1",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "ne1",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "eq1",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "restoreL_y",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"eq0": [
+			{
+				"read": "A",
+				"to_state": "eq0",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "eq0",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "eq0",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "ne0",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "backright",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"eq1": [
+			{
+				"read": "A",
+				"to_state": "eq1",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "eq1",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "ne1",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "eq1",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "backright",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"ne0": [
+			{
+				"read": "A",
+				"to_state": "ne0",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "ne0",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "eq0",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "ne0",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "restoreL_n",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"ne1": [
+			{
+				"read": "A",
+				"to_state": "ne1",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "ne1",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": "0",
+				"to_state": "ne1",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "eq1",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "restoreL_n",
+				"write": ".",
+				"action": "LEFT"
+			}
+		],
+		"backright": [
+			{
+				"read": "A",
+				"to_state": "backright",
+				"write": "A",
+				"action": "LEFT"
+			},
+			{
+				"read": "B",
+				"to_state": "backright",
+				"write": "B",
+				"action": "LEFT"
+			},
+			{
+				"read": "0",
+				"to_state": "left",
+				"write": "A",
+				"action": "LEFT"
+			},
+			{
+				"read": "1",
+				"to_state": "left",
+				"write": "B",
+				"action": "LEFT"
+			}
+		],
+		"left": [
+			{
+				"read": "0",
+				"to_state": "left",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "1",
+				"to_state": "left",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": "A",
+				"to_state": "start2",
+				"write": "A",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "start2",
+				"write": "B",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "start2",
+				"write": ".",
+				"action": "RIGHT"
+			}
+		],
+		"restoreL_y": [
+			{
+				"read": "A",
+				"to_state": "restoreL_y",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "B",
+				"to_state": "restoreL_y",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": "0",
+				"to_state": "restoreL_y",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "1",
+				"to_state": "restoreL_y",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "restoreR_y",
+				"write": ".",
+				"action": "RIGHT"
+			}
+		],
+		"restoreL_n": [
+			{
+				"read": "A",
+				"to_state": "restoreL_n",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "B",
+				"to_state": "restoreL_n",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": "0",
+				"to_state": "restoreL_n",
+				"write": "0",
+				"action": "LEFT"
+			},
+			{
+				"read": "1",
+				"to_state": "restoreL_n",
+				"write": "1",
+				"action": "LEFT"
+			},
+			{
+				"read": ".",
+				"to_state": "restoreR_n",
+				"write": ".",
+				"action": "RIGHT"
+			}
+		],
+		"restoreR_y": [
+			{
+				"read": "0",
+				"to_state": "restoreR_y",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "restoreR_y",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": "A",
+				"to_state": "restoreR_y",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "restoreR_y",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "HALT",
+				"write": "y",
+				"action": "LEFT"
+			}
+		],
+		"restoreR_n": [
+			{
+				"read": "0",
+				"to_state": "restoreR_n",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "1",
+				"to_state": "restoreR_n",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": "A",
+				"to_state": "restoreR_n",
+				"write": "0",
+				"action": "RIGHT"
+			},
+			{
+				"read": "B",
+				"to_state": "restoreR_n",
+				"write": "1",
+				"action": "RIGHT"
+			},
+			{
+				"read": ".",
+				"to_state": "HALT",
+				"write": "n",
+				"action": "LEFT"
+			}
+		]
+	}
+}
