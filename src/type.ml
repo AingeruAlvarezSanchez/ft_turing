@@ -22,4 +22,5 @@ type machine = {
   initial: state;
   finals: state list;
   transitions: transition StateMap.t;
+  rules: (state * transition list) list;
 }

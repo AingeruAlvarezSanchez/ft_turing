@@ -14,9 +14,12 @@ let print_unary (machine: Type.machine) =
     Printf.printf "Finals:\n";
     List.iter (fun m -> Printf.printf " - %s \n" m) machine.finals;
     Printf.printf "Transitions:\n";
-    Type.StateMap.iter
-        (fun (state_name, read) (t : Type.transition) ->
-            Printf.printf " - (%s, %c) -> (%s, %c, %s)\n"
-            state_name read t.to_state t.write
-            (match t.action with Type.Left -> "LEFT" | Type.Right -> "RIGHT"))
-    machine.transitions
+    List.iter
+        (fun (state_name, transitions) ->
+            List.iter
+                (fun (t : Type.transition) ->
+                    Printf.printf " - (%s, %c) -> (%s, %c, %s)\n"
+                    state_name t.read t.to_state t.write
+                    (match t.action with Type.Left -> "LEFT" | Type.Right -> "RIGHT"))
+                transitions)
+        machine.rules

@@ -75,6 +75,11 @@ let parse_transitions (states: Type.state list) (alphabet: Type.symbol list) (js
                map)
        Type.StateMap.empty
 
+let parse_rules (states: Type.state list) (alphabet: Type.symbol list) (json: Yojson.Basic.t): (Type.state * Type.transition list) list =
+  json |> member Constant.transitions |> to_assoc
+  |> List.map (fun (state_name, transitions_json) ->
+         (state_name, transitions_json |> to_list |> List.map (parse_transition states alphabet)))
+
 let parse_file (fname: string) (input: string): Type.machine =
   let json = Yojson.Basic.from_file fname in
   let states = json |> member Constant.states |> to_list |> List.map to_string in
@@ -99,6 +104,7 @@ let parse_file (fname: string) (input: string): Type.machine =
       else value
     );
     transitions = parse_transitions states alphabet json;
+    rules = parse_rules states alphabet json;
   } in
   String.iter
     (fun c ->
