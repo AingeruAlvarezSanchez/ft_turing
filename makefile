@@ -13,6 +13,8 @@ OBJ_NATIVE = $(patsubst src/%.ml, obj/%.cmx, $(SRC))
 
 OBJ_DIR = obj/
 
+CMI = $(patsubst src/%.mli,obj/%.cmi,$(wildcard src/*.mli))
+
 .PHONY: all
 all: $(NAME)
 
@@ -20,8 +22,16 @@ $(NAME): deps $(OBJ)
 	$(OPAM_EXEC) $(OCAMLFIND) $(OCAMLC) -package $(PACKAGES) -linkpkg $(OBJ) -o $(NAME)
 
 obj/%.cmo: src/%.ml
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
+	@if [ -f src/$*.mli ]; then \
+	  $(OPAM_EXEC) $(OCAMLFIND) $(OCAMLC) -package $(PACKAGES) -I $(OBJ_DIR) -c src/$*.mli -o obj/$*.cmi; \
+	fi
 	$(OPAM_EXEC) $(OCAMLFIND) $(OCAMLC) -package $(PACKAGES) -I $(OBJ_DIR) -c $< -o $@
+
+# Editar un .mli tambien tiene que reconstruir su .cmo: la receta de arriba no
+# lo ve como cambio de $< (el .ml no ha cambiado), y sin esta linea te quedas
+# con un .cmi nuevo y un .cmo viejo enlazados juntos.
+$(patsubst src/%.mli,obj/%.cmo,$(CMI)): obj/%.cmo: src/%.mli
 
 .PHONY: native
 native: deps $(OBJ_NATIVE)
