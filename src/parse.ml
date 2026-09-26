@@ -80,8 +80,34 @@ let parse_rules (states: Type.state list) (alphabet: Type.symbol list) (json: Yo
   |> List.map (fun (state_name, transitions_json) ->
          (state_name, transitions_json |> to_list |> List.map (parse_transition states alphabet)))
 
+let rec check_list_dups (lst: Yojson.Basic.t list) =
+  match lst with
+  | [] | [_] -> false
+  | x :: rest -> List.mem x rest || check_list_dups rest
+
+(* I made this function recursive for it to check elements inside JSON objects aswell *)
+let rec check_duplicate_keys (json: Yojson.Basic.t): unit =
+  (try
+      let fields = to_assoc json in
+      let seen = Hashtbl.create Constant.hasht_initial_size in
+      List.iter
+        (fun (key, value) ->
+          if Hashtbl.mem seen key then
+            failwith ("duplicate key: " ^ key);
+          Hashtbl.add seen key ();
+          check_duplicate_keys value)
+        fields
+    with Type_error _ -> ());
+  (try
+      let items = to_list json in
+      if check_list_dups items then
+        failwith ("duplicate elements in list");
+      List.iter check_duplicate_keys items
+    with Type_error _ -> ())
+
 let parse_file (fname: string) (input: string): Type.machine =
   let json = Yojson.Basic.from_file fname in
+  check_duplicate_keys json;
   let states = json |> member Constant.states |> to_list |> List.map to_string in
   let alphabet = json |> member Constant.alphabet |> to_list |> List.map to_string |> List.map to_symbol in
   let machine : Type.machine = {

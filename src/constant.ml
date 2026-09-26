@@ -22,6 +22,8 @@ let must_not_be_blank: string = "value must not be the same as the blank charact
 let not_valid_state: string = "value is not a valid state"
 let not_valid_action: string = "action is not valid"
 
+let hasht_initial_size: int = 16
+
 let decorator: string = "********************************************************************************
 *                                                                              *
 *                                 unary_sub                                    *
