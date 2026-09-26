@@ -1,0 +1,19 @@
+{
+	"name": "unary_sum",
+	"alphabet": ["1", "+", "."],
+	"blank": ".",
+	"states": ["seek", "peel", "HALT"],
+	"initial": "seek",
+	"finals": ["HALT"],
+	"transitions": {
+		"seek": [
+			{ "read": "1", "to_state": "seek", "write": "1", "action": "RIGHT" },
+			{ "read": "+", "to_state": "seek", "write": "1", "action": "RIGHT" },
+			{ "read": ".", "to_state": "peel", "write": ".", "action": "LEFT" }
+		],
+		"peel": [
+			{ "read": "1", "to_state": "HALT", "write": ".", "action": "LEFT" },
+			{ "read": ".", "to_state": "HALT", "write": ".", "action": "RIGHT" }
+		]
+	}
+}
