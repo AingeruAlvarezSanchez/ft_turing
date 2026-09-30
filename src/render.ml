@@ -33,7 +33,7 @@ let window ?(width = 20) tape =
   "[" ^ String.concat "" (List.mapi mark (cells @ padding)) ^ "]"
 
 let banner_width = 80
-let box_width = 70
+let box_width = banner_width - 2
 let stars = String.make banner_width '*'
 
 let centered width text =
@@ -108,3 +108,10 @@ let print_outcome (status : Executor.status) (final : Executor.configuration) =
       Printf.printf
         "timed out: the machine did not halt within its step budget\n"
   | Executor.Accepted -> ()
+
+let print_table (points: (int * int * Executor.status) list): unit =
+  Printf.printf "%-8s %-10s %s\n" "n" "steps" "status";
+  List.iter
+    (fun (n, steps, status) ->
+      Printf.printf "%-8d %-10d %s\n" n steps (status_to_string status))
+    points
