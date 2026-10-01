@@ -21,6 +21,8 @@ let not_valid_alphabet: string = "value is not a valid alphabet character"
 let must_not_be_blank: string = "value must not be the same as the blank character"
 let not_valid_state: string = "value is not a valid state"
 let not_valid_action: string = "action is not valid"
+let undeclared_transition_state: string = "is not a declared state"
+let duplicated_transition: string = "more than one rule for this state and read symbol"
 
 let hasht_initial_size: int = 16
 
