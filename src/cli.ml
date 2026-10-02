@@ -42,9 +42,26 @@ let calculate (description: string) (input: string) : int * int * Executor.statu
   let status, final = Executor.run machine (Executor.initial machine ~input) in
   (String.length input, Executor.steps final, status)
 
+let exponents (points: (int * int * Executor.status) list): (int * int * Executor.status * float option) list =
+  let add_row (last, table) (n, steps, status) =
+    match status, last with
+    | Executor.Accepted, Some (last_n, last_steps) ->
+      let k = log (float steps /. float last_steps) /. log (float n /. float last_n) in
+      (Some (n, steps), (n, steps, status, Some k) :: table)
+    | Executor.Accepted, None ->
+      (Some (n, steps), (n, steps, status, None) :: table)
+    | _ -> (last, (n, steps, status, None) :: table)
+  in
+  List.rev (snd (List.fold_left add_row (None, []) points))
+
 let complexity (description: string) (inputs: string list) : int =
   let points = List.map (calculate description) inputs in
-  Render.print_table points;
+  let sorted =
+    List.sort_uniq (fun (n1, _, s1) (n2, _, s2) -> compare (n1, s1) (n2, s2)) points
+  in
+  let rows = exponents sorted in
+  Render.print_table rows;
+  Render.print_complexity rows;
   0
 
 (* La frontera de errores. El parser revienta (`failwith` y las excepciones de
