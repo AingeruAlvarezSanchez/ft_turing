@@ -10,8 +10,9 @@
 6. [Machine Description Format](#6-machine-description-format)
 7. [Output Format](#7-output-format)
 8. [The Bundled Machines](#8-the-bundled-machines)
-9. [Error Handling](#9-error-handling)
-10. [References](#10-references)
+9. [The Universal Machine's Encoding](#9-the-universal-machines-encoding)
+10. [Error Handling](#10-error-handling)
+11. [References](#11-references)
 
 ## 1. Overview
 
@@ -79,7 +80,7 @@ The exact shape of that output is in [Section 7](#7-output-format).
 The exit code reflects the outcome, not just success or failure of the program:
 
 - **0**: the machine produced a verdict, either `ACCEPTED` or `BLOCKED`. A stuck machine is a legitimate result, so it exits cleanly.
-- **1**: no verdict was reached, either the run timed out, or the arguments or the JSON were invalid ([Section 9](#9-error-handling)).
+- **1**: no verdict was reached, either the run timed out, or the arguments or the JSON were invalid ([Section 10](#10-error-handling)).
 
 ## 5. Build System
 
@@ -96,6 +97,7 @@ Available targets:
 | `all` (default) | Ensures dependencies, then compiles all sources to **bytecode** with `ocamlc` and links `ft_turing`.          |
 | `native`        | Same, but compiles to a **native** executable with `ocamlopt`.                                                |
 | `debug`         | Rebuilds with debug info (`-g`) and produces a `ft_turing.bc` bytecode file for use under the debugger.       |
+| `test`          | Builds, then runs the bundled machines and the error paths.                                                 |
 | `clean`         | Removes the `obj/` directory of intermediate object files.                                                    |
 | `fclean`        | Runs `clean` and additionally removes the `ft_turing` and `ft_turing.bc` executables.                         |
 | `re`            | `fclean` followed by `all`.                                                                                   |
@@ -139,8 +141,8 @@ Each rule is an object:
 - `to_state`: the state to switch to.
 - `action`: `LEFT` or `RIGHT`, which way the head moves.
 
-For a given state, the read symbols must be distinct. Two rules for the same `(state, read)` pair would be ambiguous, 
-and the parser rejects that.
+For a given state, the read symbols must be distinct. Two rules for the same `(state, read)` pair would make the machine
+non-deterministic, so the parser rejects that, and it rejects a `transitions` key that is not a declared state.
 
 ## 7. Output Format
 
@@ -184,31 +186,87 @@ A `BLOCKED` run adds the `(state, symbol)` pair that had no rule; a `TIMED_OUT` 
 
 ## 8. The Bundled Machines
 
-The `res/` directory holds machine descriptions. The five the assignment asks for, plus a couple of extras:
+The `res/` directory holds machine descriptions. The five the assignment asks for, plus one extra:
 
-| File              | What it computes                                                                            |
-|-------------------|---------------------------------------------------------------------------------------------|
-| `unary_sum.json`  | Unary addition: adds two numbers written as runs of `1`.                                    |
-| `palindrome.json` | Decides whether the input is a palindrome, writing `y`/`n` as the verdict.                  |
-| `zeros_ones.json` | Decides the language `0ⁿ1ⁿ` (e.g. `000111`): the same count of `0`s then `1`s.              |
-| `zeros_2n.json`   | Decides the language `0²ⁿ`: an even number of `0`s.                                         |
-| `universal.json`  | A universal machine: its input encodes another machine and a tape, which it then simulates. |
-| `unary_sub.json`  | Extra: unary subtraction.                                                                   |
-| `unary.json`      | Extra: another unary machine.                                                               |
+| File              | Alphabet | What it computes                                                                            |
+|-------------------|----------|---------------------------------------------------------------------------------------------|
+| `unary_sum.json`  | `1` `+` `.` | Unary addition of `1`s separated by `+`: `11+111` sums to five `1`s.                   |
+| `palindrome.json` | `0` `1` `.` `A` `B` `y` `n` | Decides whether a `0`/`1` word is a palindrome, writing `y`/`n` as the verdict. |
+| `zeros_ones.json` | `0` `1` `.` `y` `n` | Decides the language `0ⁿ1ⁿ` (e.g. `000111`): the same count of `0`s then `1`s.      |
+| `zeros_2n.json`   | `0` `1` `.` `y` `n` | Decides the language `0²ⁿ`: an even number of `0`s.                                 |
+| `universal.json`  | 22 symbols, 384 states | A universal machine: its input encodes another machine and a tape, which it then simulates. See [Section 9](#9-the-universal-machines-encoding). |
+| `unary_sub.json`  | `1` `.` `-` `=` | Extra: unary subtraction: `111-11=` leaves a single `1`.                           |
 
-## 9. Error Handling
+Notes on the machines worth knowing before you feed them an input:
+
+- **`unary_sum`** takes exactly two operands (`a` `1`s, a `+`, then `b` `1`s). It rewrites the `+` to a `1` and erases the
+  last `1` before halting, so the result is `a + b` `1`s. `11+111` → `11111`, and `1+1` → `11`.
+- **`palindrome`** works over the binary alphabet `{0,1}`, not over arbitrary characters. `A` and `B` are internal markers
+  that let the machine remember a character it has already rewritten.
+- **`universal`** simulates whichever machine its input describes, so it needs an input in its own encoding format, not a
+  plain word. The encoding is spelled out in [Section 9](#9-the-universal-machines-encoding); run it on an encoded input and
+  it ends with the same tape the simulated machine would leave by itself.
+
+## 9. The Universal Machine's Encoding
+
+`res/universal.json` is an **interpreter**, not a special case: its input carries the alphabet, the states and the transitions
+of another machine plus an input for that machine, and it executes them step by step. Nothing about what the simulated machine
+does is baked into the 384 states; the only thing hardcoded there is how to walk from one place to another and recognise a
+symbol.
+
+The whole thing lives on a single tape, with the simulated machine's tape to the right of its own:
+
+| Cells       | Contents                                                                                                                              |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `*`         | Anchor of the whole thing, the leftmost cell.                                                                                         |
+| 4 cells     | Symbol table: the code of the simulated non-blank symbol of index 0, 1, 2 and 3.                                                      |
+| then, per simulated state | One block, in declaration order: an anchor cell (`O` in the current block, `@` in the others), the state's digit, a final flag (`1` final, `0` not), then **five records of three cells** — `[write][move][to]`. Record *i* is the rule for reading the symbol of index *i*. |
+| `#`         | End of the description, start of the simulated tape.                                                                                 |
+| then        | The simulated tape. The cell under the simulated head carries the uppercase variant of its symbol (`P` `Q` `R` `S`, and `T` for the blank). |
+
+So a single step of the interpreter is: find the marked cell on the simulated tape, walk left to `*` and along the symbol table
+to learn which index the symbol has, walk right to the current block and to record *i* of it, write the new symbol there and mark
+the neighbour in the direction the rule asked for, then drop the old `O` and select the block of the destination state. If that
+block's flag is `1`, the simulated machine had halted, and so does the interpreter, in `halt`.
+
+Some symbols only exist because the input string may not contain the real blank:
+
+| Symbol   | Meaning                                                                                        |
+|----------|------------------------------------------------------------------------------------------------|
+| `z`      | The simulated machine's blank, as written on the simulated tape.                               |
+| `T`      | The simulated blank under the simulated head (the marked form).                                |
+| `-`      | The simulated blank in a rule's `write` field.                                                  |
+| `0`      | In a `write` field: no rule for that `(state, symbol)` pair, so the simulation gets stuck.      |
+| `<` `>`  | Move left / right.                                                                              |
+| `.`      | The interpreter's own blank.                                                                    |
+
+When the simulated machine has no rule for the pair it reads, the interpreter does not invent one: it has no applicable rule
+itself and the run is reported as `BLOCKED`, exactly as `unary_sum` would be if you ran it on the same input directly.
+
+**Capacity** is deliberately bounded to what the assignment needs — up to 4 non-blank symbols, one blank, and 4 states.
+Machine 1 uses 2, 1 and 3. The simulated tape also has a four-cell left margin of `z`s, so the simulated head can step left
+off the start of its input; run off that margin and the interpreter reports `BLOCKED` rather than corrupting the description.
+
+Note that the interpreter is quadratic in the length of the input: every simulated step has to walk the whole description
+first. A short word like `11+111` takes about 3,200 of the 100,000 steps in the budget, but a very long one would run into
+it and be reported as `TIMED_OUT`.
+
+## 10. Error Handling
 
 The program never crashes on bad input; every failure becomes a message on standard error and exit code 1.
 
 - **Bad arguments**: too few, too many, or an unrecognized option, each with its own message.
 - **Missing file / directory**: the path doesn't exist, or points to a directory instead of a JSON file.
 - **Malformed JSON**: a syntax error in the file, reported with `yojson`'s position.
-- **Invalid machine**: a symbol that isn't length 1, a `read`/`write` outside the alphabet, a `to_state` that isn't a
-- declared state, an `action` that isn't `LEFT`/`RIGHT`, or duplicate rules for one `(state, read)` pair.
+- **Invalid machine**: a symbol that isn't length 1, a `read`/`write` outside the alphabet, a `blank` outside the alphabet, an
+  `initial`/`finals` entry or a `to_state` that isn't a declared state, a `transitions` key that isn't a declared state, an
+  `action` that isn't `LEFT`/`RIGHT`, duplicate entries in `alphabet`/`states`/`finals`, or two rules for the same
+  `(state, read)` pair, which would make the machine non-deterministic.
+- **Invalid input**: a character of `input` outside the alphabet, or the blank symbol in `input`.
 
 Parsing raises exceptions; the `cli` module is the single boundary that catches them and prints a clean line, never an OCaml backtrace.
 
-## 10. References
+## 11. References
 
 - [Turing machine (Wikipedia)](https://en.wikipedia.org/wiki/Turing_machine)
 - [Universal Turing machine (Wikipedia)](https://en.wikipedia.org/wiki/Universal_Turing_machine)
